@@ -1,5 +1,9 @@
 # Torch-MKLDNN-benchmark
 
+To run the original performance, use: th benchmark_nn.lua
+
+To run the Torch+MKLDNN performance, use: ./run.sh or th benchmark_mkldnn.lua
+
 Performance of Torch+MKLDNN compared with original torch is as follows:
 
 ##Environment:
