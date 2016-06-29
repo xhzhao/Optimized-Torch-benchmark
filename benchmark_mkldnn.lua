@@ -19,11 +19,11 @@ sys.compare = false--false
 sys.timerEnable = false--true
 
 local nets = {}
---nets[#nets+1] = require 'alexnet_original_224'
+nets[#nets+1] = require 'alexnet_original_224'
 --nets[#nets+1] = require 'alexnet_original_BN'
 --nets[#nets+1] = require 'vgg_e'
 --nets[#nets+1] = require 'googlenet'
-nets[#nets+1] = require 'resnet'
+--nets[#nets+1] = require 'resnet'
 
 
 local libs = {}
