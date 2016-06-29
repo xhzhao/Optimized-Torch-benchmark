@@ -116,7 +116,7 @@ local function createModel(lib)
       model:add(Convolution(3,64,7,7,2,2,3,3))
       model:add(SBatchNorm(64))
       model:add(ReLU(true))
-      model:add(Max(3,3,2,2,1,1))
+      model:add(Max(3,3,2,2):ceil())
       model:add(layer(block, 64, def[1]))
       model:add(layer(block, 128, def[2], 2))
       model:add(layer(block, 256, def[3], 2))
@@ -147,8 +147,8 @@ local function createModel(lib)
    end
 
    --ConvInit('cudnn.SpatialConvolution')
-   --ConvInit('nn.SpatialConvolution')
-   ConvInit(lib[1])
+   ConvInit('nn.SpatialConvolution')
+   --ConvInit(lib[1])
    --BNInit('fbnn.SpatialBatchNormalization')
    --BNInit('cudnn.SpatialBatchNormalization')
    BNInit('nn.SpatialBatchNormalization')
@@ -165,7 +165,7 @@ local function createModel(lib)
 
    model:get(1).gradInput = nil
 
-   return model,'resnet',{64,3,224,224}
+   return model,'resnet',{32,3,224,224}
 end
 
 return createModel
