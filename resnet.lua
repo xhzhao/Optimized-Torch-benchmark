@@ -165,7 +165,7 @@ local function createModel(lib)
 
    model:get(1).gradInput = nil
 
-   return model,'resnet',{32,3,224,224}
+   return model,'resnet',{64,3,224,224}
 end
 
 return createModel
