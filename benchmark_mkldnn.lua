@@ -90,7 +90,6 @@ for i=1,#nets do
          model:accGradParameters(input, output)
          --cutorch.synchronize()
          collectgarbage()
-        print("loop step +1")
          end
 
       end
