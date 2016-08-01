@@ -1,4 +1,4 @@
-# IntelTorch-benchmark
+# Optimized-Torch-benchmark
 
 To run the original Torch performance, use: th benchmark_nn.lua
 
