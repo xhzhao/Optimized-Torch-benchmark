@@ -19,37 +19,48 @@ require 'nn'
 --sys.timerEnable = false--true
 
 sys.totalTime = 0
-sys.convTime = 0
-sys.maxpoolingTime = 0
-sys.avgpoolingTime = 0
-sys.reluTime = 0
-sys.sbnTime = 0
-sys.linearTime = 0
-sys.dropTime = 0
-sys.concatTime = 0 -- ConcatTable.lua
-sys.concatTime2 = 0 -- Concat.lua
-
+sys.convTime_forward = 0
+sys.convTime_backward = 0
+sys.maxpoolingTime_forward = 0
+sys.maxpoolingTime_backward = 0
+sys.avgpoolingTime_forward = 0
+sys.avgpoolingTime_backward = 0
+sys.reluTime_forward = 0
+sys.reluTime_backward = 0
+sys.sbnTime_forward = 0
+sys.sbnTime_backward = 0
+sys.linearTime_forward = 0
+sys.linearTime_backward = 0
+sys.dropTime_forward = 0
+sys.dropTime_backward = 0
+sys.concatTableTime_forward = 0
+sys.concatTableTime_backward = 0
+sys.concatTime_forward = 0
+sys.concatTime_backward = 0
+sys.thresholdTime_forward = 0
+sys.thresholdTime_backward = 0
 
 
 local nets = {}
-nets[#nets+1] = require 'alexnet'
+--nets[#nets+1] = require 'alexnet'
+nets[#nets+1] = require 'alexnet_g1'
 --nets[#nets+1] = require 'vgg_e'
 --nets[#nets+1] = require 'googlenet'
 --nets[#nets+1] = require 'resnet'
---nets[#nets+1] = require 'resnet_test'
 
 
 local libs = {}
---libs[#libs+1] = {cudnn.SpatialConvolution, cudnn.SpatialMaxPooling, cudnn.ReLU, 'BDHW', 'cudnn'}
+--libs[#libs+1] = {cudnn.SpatialConvolution, cudnn.SpatialMaxPoolingMKLDNN, cudnn.ReLU, 'BDHW', 'cudnn'}
 -- libs[#libs+1] = {fbnn.SpatialConvolution, cudnn.SpatialMaxPooling, cudnn.ReLU, 'BDHW', 'fbnn'}
 libs[#libs+1] = {nn.SpatialConvolutionMKLDNN, nn.SpatialMaxPoolingMKLDNN, nn.ReLUMKLDNN, 'BDHW', 'nn'}
+--libs[#libs+1] = {nn.SpatialConvolution, nn.SpatialMaxPoolingMKLDNN, nn.ReLU, 'BDHW', 'nn'}
 --libs[#libs+1] = {mkldnn.SpatialConvolutionMM, mkldnn.SpatialMaxPooling, mkldnn.ReLU, 'BDHW', 'nn'}
 -- libs[#libs+1] = {nn.SpatialConvolutionBHWD, nn.SpatialMaxPoolingBHWD, nn.ReLU, 'BHWD', 'nnBHWD'}
 print('Running on CPU...')
 --print('Running on device: ' .. cutorch.getDeviceProperties(cutorch.getDevice()).name)
 
 steps = 10 -- nb of steps in loop to average perf
-nDryRuns = 15
+nDryRuns = 5
 
 torch.setdefaulttensortype('torch.FloatTensor')
 
@@ -103,31 +114,51 @@ for i=1,#nets do
 	--print("total time = ",sys.totalTime,", convTime = ", sys.convTime, ", sys.maxpoolingTime = ",sys.maxpoolingTime,", sys.avgpoolingTime = ",sys.avgpoolingTime,", sys.reluTime = ",sys.reluTime, ", sys.sbnTime = ",sys.sbnTime,",sys.linearTime=",sys.linearTime,",sys.dropTime=",sys.dropTime,", sys.concatTime = ",sys.concatTime,",sys.concatTime2=",sys.concatTime2,", sum = ",(sys.convTime+sys.maxpoolingTime+sys.avgpoolingTime+sys.reluTime+sys.sbnTime+sys.linearTime+sys.dropTime+sys.concatTime+sys.concatTime2))
 
 	print("sys.totalTime =		",sys.totalTime)
-	print("ys.convTime =		",sys.convTime)
-	print("sys.maxpoolingTime =	",sys.maxpoolingTime)
-	print("sys.avgpoolingTime =	",sys.avgpoolingTime)
-	print("sys.reluTime =		",sys.reluTime)
-	print("sys.sbnTime =		",sys.sbnTime)
-	print("sys.linearTime =	",	sys.linearTime)
-	print("sys.dropTime=		",sys.dropTime)
-	print("sys.concatTime=		",sys.concatTime)
-	print("sys.concatTime2 =	",sys.concatTime2)
-	print("sum = 			",sys.convTime+sys.maxpoolingTime+sys.avgpoolingTime+sys.reluTime+sys.sbnTime+sys.linearTime+sys.dropTime+sys.concatTime+sys.concatTime2)
+	print("sys.convTime_forward =		",sys.convTime_forward)
+	print("sys.convTime_backward =		",sys.convTime_backward)
+	print("sys.maxpoolingTime_forward =	",sys.maxpoolingTime_forward)
+	print("sys.maxpoolingTime_backward =	",sys.maxpoolingTime_backward)
+	print("sys.avgpoolingTime_forward =	",sys.avgpoolingTime_forward)
+	print("sys.avgpoolingTime_backward =	",sys.avgpoolingTime_backward)
+	print("sys.reluTime_forward =		",sys.reluTime_forward)
+	print("sys.reluTime_backward =		",sys.reluTime_backward)
+	print("sys.sbnTime_forward =		",sys.sbnTime_forward)
+	print("sys.sbnTime_backward =		",sys.sbnTime_backward)
+	print("sys.linearTime_forward =	",	sys.linearTime_forward)
+	print("sys.linearTime_backward =	",	sys.linearTime_backward)
+	print("sys.dropTime_forward=		",sys.dropTime_forward)
+	print("sys.dropTime_backward=		",sys.dropTime_backward)
+	print("sys.concatTableTime_forward=		",sys.concatTableTime_forward)
+	print("sys.concatTableTime_backward=		",sys.concatTableTime_backward)
+	print("sys.concatTime_forward =		",sys.concatTime_forward)
+	print("sys.concatTime_backward=		",sys.concatTime_backward)
+	print("sys.thresholdTime_forward =      ",sys.thresholdTime_forward)
+	print("sys.thresholdTime_backward =      ",sys.thresholdTime_backward)
+	print("sum = 			",sys.convTime_forward+sys.convTime_backward+sys.maxpoolingTime_forward+sys.maxpoolingTime_backward+sys.avgpoolingTime_forward+sys.avgpoolingTime_backward+sys.reluTime_forward+sys.reluTime_backward+sys.sbnTime_forward+sys.sbnTime_backward+sys.linearTime_forward+sys.linearTime_backward+sys.dropTime_forward+sys.dropTime_backward+sys.concatTime_forward+sys.concatTime_backward+sys.concatTableTime_forward+sys.concatTableTime_backward+sys.thresholdTime_forward+sys.thresholdTime_backward)
 	print("------")
 
 
 	sys.totalTime = timeEnd - timeStart
-	sys.convTime = 0
-	sys.maxpoolingTime = 0
-	sys.avgpoolingTime = 0
-	sys.reluTime = 0
-	sys.sbnTime = 0
-	sys.linearTime = 0
-	sys.dropTime = 0
-	sys.concatTime = 0
-	sys.concatTime2 = 0
-
-
+	sys.convTime_forward = 0
+	sys.convTime_backward = 0
+	sys.maxpoolingTime_forward = 0
+	sys.maxpoolingTime_backward = 0
+	sys.avgpoolingTime_forward = 0
+	sys.avgpoolingTime_backward = 0
+	sys.reluTime_forward = 0
+	sys.reluTime_backward = 0
+	sys.sbnTime_forward = 0
+	sys.sbnTime_backward = 0
+	sys.linearTime_forward = 0
+	sys.linearTime_backward = 0
+	sys.dropTime_forward = 0
+	sys.dropTime_backward = 0
+	sys.concatTableTime_forward = 0
+	sys.concatTableTime_backward = 0
+	sys.concatTime_forward = 0
+	sys.concatTime_backward = 0
+	sys.thresholdTime_forward = 0
+	sys.thresholdTime_backward = 0
          end
       else
 
@@ -144,7 +175,8 @@ for i=1,#nets do
 
       end
 
-	sys.timerEnable = false
+      if steps > 0 then
+      sys.timerEnable = false
 
       local tmf, tmbi, tmbg
       sys.tic()
@@ -182,7 +214,8 @@ for i=1,#nets do
       print(string.format("%-30s %25s %10.2f", lib_name, ':Backward:', (tmbi+tmbg)*1000))
       print(string.format("%-30s %25s %10.2f", lib_name, ':TOTAL:', (tmf+tmbi+tmbg)*1000))
       print()
+      end
    end
 end
 
-print('')
+print('haha end')
