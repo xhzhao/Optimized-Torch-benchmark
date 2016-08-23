@@ -15,7 +15,7 @@ local function createModel(lib)
    local Avg = nn.SpatialAveragePooling
    local ReLU = lib[3]
    local Max = lib[2]
-   local SBatchNorm = nn.SpatialBatchNormalization
+   local SBatchNorm = nn.SpatialBatchNormalizationMKLDNN
 
    local depth = 50
    local shortcutType = 'B'

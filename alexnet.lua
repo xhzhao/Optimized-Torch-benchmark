@@ -3,17 +3,19 @@ function alexnet(lib)
    local SpatialConvolution = lib[1]
    local SpatialMaxPooling = lib[2]
    local ReLU = lib[3]
-   local SBatchNorm = nn.SpatialBatchNormalization
+   local SBatchNorm = nn.SpatialBatchNormalizationMKLDNN
 
 
-   local features = nn.Concat(2)
+   local features = nn.ConcatMKLDNN(2)
    local fb1 = nn.Sequential() -- branch 1
    --fb1:add(SpatialConvolution(3,48,11,11,4,4,2,2))       -- 224 -> 55
    fb1:add(SpatialConvolution(3,48,11,11,4,4,0,0))       -- 227 -> 55
    fb1:add(ReLU(true))
+   fb1:add(SBatchNorm(48))
    fb1:add(SpatialMaxPooling(3,3,2,2))                   -- 55 ->  27
    fb1:add(SpatialConvolution(48,128,5,5,1,1,2,2))       --  27 -> 27
    fb1:add(ReLU(true))
+   fb1:add(SBatchNorm(128))
    fb1:add(SpatialMaxPooling(3,3,2,2))                   --  27 ->  13
    fb1:add(SpatialConvolution(128,192,3,3,1,1,1,1))      --  13 ->  13
    fb1:add(ReLU(true))
