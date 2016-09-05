@@ -56,7 +56,7 @@ local function createModel(lib)
       s:add(SBatchNorm(n))
 
       return nn.Sequential()
-         :add(nn.ConcatTable()
+         :add(nn.ConcatTableMKLDNN()
             :add(s)
             :add(shortcut(nInputPlane, n, stride)))
          :add(nn.CAddTable(true))
