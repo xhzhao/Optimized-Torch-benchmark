@@ -29,6 +29,8 @@ sys.reluTime_forward = 0
 sys.reluTime_backward = 0
 sys.sbnTime_forward = 0
 sys.sbnTime_backward = 0
+sys.lrnTime_forward = 0
+sys.lrnTime_backward = 0
 sys.linearTime_forward = 0
 sys.linearTime_backward = 0
 sys.dropTime_forward = 0
@@ -43,7 +45,8 @@ sys.thresholdTime_backward = 0
 
 local nets = {}
 --nets[#nets+1] = require 'alexnet'
-nets[#nets+1] = require 'alexnet_g1'
+--nets[#nets+1] = require 'alexnet_g1'
+nets[#nets+1] = require 'alexnet_g2'
 --nets[#nets+1] = require 'vgg_e'
 --nets[#nets+1] = require 'googlenet'
 --nets[#nets+1] = require 'resnet'
@@ -122,6 +125,8 @@ for i=1,#nets do
 	print("sys.avgpoolingTime_backward =	",sys.avgpoolingTime_backward)
 	print("sys.reluTime_forward =		",sys.reluTime_forward)
 	print("sys.reluTime_backward =		",sys.reluTime_backward)
+	print("sys.lrnTime_forward =		",sys.lrnTime_forward)
+	print("sys.lrnTime_backward =		",sys.lrnTime_backward)
 	print("sys.sbnTime_forward =		",sys.sbnTime_forward)
 	print("sys.sbnTime_backward =		",sys.sbnTime_backward)
 	print("sys.linearTime_forward =	",	sys.linearTime_forward)
@@ -134,7 +139,7 @@ for i=1,#nets do
 	print("sys.concatTime_backward=		",sys.concatTime_backward)
 	print("sys.thresholdTime_forward =      ",sys.thresholdTime_forward)
 	print("sys.thresholdTime_backward =      ",sys.thresholdTime_backward)
-	print("sum = 			",sys.convTime_forward+sys.convTime_backward+sys.maxpoolingTime_forward+sys.maxpoolingTime_backward+sys.avgpoolingTime_forward+sys.avgpoolingTime_backward+sys.reluTime_forward+sys.reluTime_backward+sys.sbnTime_forward+sys.sbnTime_backward+sys.linearTime_forward+sys.linearTime_backward+sys.dropTime_forward+sys.dropTime_backward+sys.concatTime_forward+sys.concatTime_backward+sys.concatTableTime_forward+sys.concatTableTime_backward+sys.thresholdTime_forward+sys.thresholdTime_backward)
+	print("sum = 			",sys.convTime_forward+sys.convTime_backward+sys.maxpoolingTime_forward+sys.maxpoolingTime_backward+sys.avgpoolingTime_forward+sys.avgpoolingTime_backward+sys.reluTime_forward+sys.reluTime_backward+sys.sbnTime_forward+sys.sbnTime_backward+sys.linearTime_forward+sys.linearTime_backward+sys.dropTime_forward+sys.dropTime_backward+sys.concatTime_forward+sys.concatTime_backward+sys.concatTableTime_forward+sys.concatTableTime_backward+sys.thresholdTime_forward+sys.thresholdTime_backward+sys.lrnTime_forward+sys.lrnTime_backward)
 	print("------")
 
 
@@ -149,6 +154,8 @@ for i=1,#nets do
 	sys.reluTime_backward = 0
 	sys.sbnTime_forward = 0
 	sys.sbnTime_backward = 0
+	sys.lrnTime_forward = 0
+	sys.lrnTime_backward = 0
 	sys.linearTime_forward = 0
 	sys.linearTime_backward = 0
 	sys.dropTime_forward = 0
