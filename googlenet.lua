@@ -12,8 +12,8 @@
 -- Some shortcuts
 local SC  = nn.SpatialConvolutionMKLDNN
 local SMP = nn.SpatialMaxPoolingMKLDNN
+local SAP = nn.SpatialAveragePoolingMKLDNN
 local RLU = nn.ReLUMKLDNN
-local SpatialAveragePooling = nn.SpatialAveragePooling
 local SBatchNorm = nn.SpatialBatchNormalizationMKLDNN
 local LRN = nn.LRNMKLDNN
 
@@ -89,7 +89,7 @@ local function googlenet(lib)
    main2:add(inc(832, {{384}, {192,384}, {48,128}, {3,128}})) -- 20,21 / 5(b)
 
    local sftMx0 = nn.Sequential() -- softMax0
-   sftMx0:add(SpatialAveragePooling(5, 5, 3, 3))
+   sftMx0:add(SAP(5, 5, 3, 3))
    sftMx0:add(SC(512, 128, 1, 1)):add(RLU(true))
    sftMx0:add(nn.View(128*4*4):setNumInputDims(3))
    sftMx0:add(nn.Linear(128*4*4, 1024)):add(nn.ReLU())
@@ -98,7 +98,7 @@ local function googlenet(lib)
    sftMx0:add(nn.LogSoftMax())
 
    local sftMx1 = nn.Sequential() -- softMax1
-   sftMx1:add(SpatialAveragePooling(5, 5, 3, 3))
+   sftMx1:add(SAP(5, 5, 3, 3))
    sftMx1:add(SC(528, 128, 1, 1)):add(RLU(true))
    sftMx1:add(nn.View(128*4*4):setNumInputDims(3))
    sftMx1:add(nn.Linear(128*4*4, 1024)):add(nn.ReLU())
@@ -107,7 +107,7 @@ local function googlenet(lib)
    sftMx1:add(nn.LogSoftMax())
 
    local sftMx2 = nn.Sequential() -- softMax2
-   sftMx2:add(SpatialAveragePooling(7, 7, 1, 1))
+   sftMx2:add(SAP(7, 7, 1, 1))
    sftMx2:add(nn.View(1024):setNumInputDims(3))
    sftMx2:add(nn.Dropout(0.4))
    sftMx2:add(nn.Linear(1024, 1000))
