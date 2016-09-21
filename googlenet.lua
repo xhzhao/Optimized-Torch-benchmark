@@ -1,69 +1,152 @@
--- adapted from nagadomi's CIFAR attempt: https://github.com/nagadomi/kaggle-cifar10-torch7/blob/cuda-convnet2/inception_model.lua
-local function inception(depth_dim, input_size, config, lib)
-   local SpatialConvolution = lib[1]
-   local SpatialMaxPooling = lib[2]
-   local ReLU = lib[3]
+--------------------------------------------------------------------------------
+-- GoogLeNet neural network architecture
+-- Reliable implementation of http://arxiv.org/abs/1409.4842
+--------------------------------------------------------------------------------
+-- Alfredo Canziani, Mar 16
+--------------------------------------------------------------------------------
 
-   local depth_concat = nn.ConcatMKLDNN(depth_dim)
+--require 'cudnn'
+--require 'cunn'
+--require 'nn'
+
+-- Some shortcuts
+local SC  = nn.SpatialConvolutionMKLDNN
+local SMP = nn.SpatialMaxPoolingMKLDNN
+local RLU = nn.ReLUMKLDNN
+local SpatialAveragePooling = nn.SpatialAveragePooling
+local SBatchNorm = nn.SpatialBatchNormalizationMKLDNN
+local LRN = nn.LRNMKLDNN
+
+-- Utility inc(eption) function ------------------------------------------------
+local function inc(input_size, config) -- inception
+   local depthCat = nn.ConcatMKLDNN(2) -- should be 1, 2 considering batches
+
    local conv1 = nn.Sequential()
-   conv1:add(SpatialConvolution(input_size, config[1][1], 1, 1)):add(ReLU(true))
-   depth_concat:add(conv1)
+   conv1:add(SC(input_size, config[1][1], 1, 1)):add(RLU(true))
+   depthCat:add(conv1)
 
    local conv3 = nn.Sequential()
-   conv3:add(SpatialConvolution(input_size, config[2][1], 1, 1)):add(ReLU(true))
-   conv3:add(SpatialConvolution(config[2][1], config[2][2], 3, 3, 1, 1, 1, 1)):add(ReLU(true))
-   depth_concat:add(conv3)
+   conv3:add(SC(input_size, config[2][1], 1, 1)):add(RLU(true))
+   conv3:add(SC(config[2][1], config[2][2], 3, 3, 1, 1, 1, 1)):add(RLU(true))
+   depthCat:add(conv3)
 
    local conv5 = nn.Sequential()
-   conv5:add(SpatialConvolution(input_size, config[3][1], 1, 1)):add(ReLU(true))
-   conv5:add(SpatialConvolution(config[3][1], config[3][2], 5, 5, 1, 1, 2, 2)):add(ReLU(true))
-   depth_concat:add(conv5)
+   conv5:add(SC(input_size, config[3][1], 1, 1)):add(RLU(true))
+   conv5:add(SC(config[3][1], config[3][2], 5, 5, 1, 1, 2, 2)):add(RLU(true))
+   depthCat:add(conv5)
 
    local pool = nn.Sequential()
-   pool:add(SpatialMaxPooling(config[4][1], config[4][1], 1, 1,1,1))
-   pool:add(SpatialConvolution(input_size, config[4][2], 1, 1)):add(ReLU(true))
-   depth_concat:add(pool)
+   pool:add(SMP(config[4][1], config[4][1], 1, 1, 1, 1))
+   pool:add(SC(input_size, config[4][2], 1, 1)):add(RLU(true))
+   depthCat:add(pool)
 
-   return depth_concat
+   return depthCat
 end
+
+-- Utility fac(torised convolution) function -----------------------------------
 
 local function googlenet(lib)
-   local SpatialConvolution = lib[1]
-   local SpatialMaxPooling = lib[2]
-   --local SpatialAveragePooling = torch.type(lib[2]) == 'nn.SpatialMaxPooling' and nn.SpatialAveragePooling or cudnn.SpatialAveragePooling
-   local SpatialAveragePooling = nn.SpatialAveragePoolingMKLDNN
-   local ReLU = lib[3]
-   local model = nn.Sequential()
-   model:add(SpatialConvolution(3,64,7,7,2,2,3,3)):add(ReLU(true))
-   --model:add(SpatialMaxPooling(3,3,2,2,1,1))
-   model:add(SpatialMaxPooling(3,3,2,2):ceil())
-   model:add(nn.LRNMKLDNN(5,0.0001,0.75))-- LRN (not added for now)
-   model:add(SpatialConvolution(64,64,1,1,1,1,0,0)):add(ReLU(true))
-   model:add(SpatialConvolution(64,192,3,3,1,1,1,1)):add(ReLU(true))
-   -- LRN (not added for now)
-   model:add(nn.LRNMKLDNN(5,0.0001,0.75))-- LRN (not added for now)
-   --model:add(SpatialMaxPooling(3,3,2,2,1,1))
-   model:add(SpatialMaxPooling(3,3,2,2):ceil())
-   model:add(inception(2, 192, {{ 64}, { 96,128}, {16, 32}, {3, 32}},lib)) -- 256
-   model:add(inception(2, 256, {{128}, {128,192}, {32, 96}, {3, 64}},lib)) -- 480
-   --model:add(SpatialMaxPooling(3,3,2,2,1,1))
-   model:add(SpatialMaxPooling(3,3,2,2):ceil())
-   model:add(inception(2, 480, {{192}, { 96,208}, {16, 48}, {3, 64}},lib)) -- 4(a)
-   model:add(inception(2, 512, {{160}, {112,224}, {24, 64}, {3, 64}},lib)) -- 4(b)
-   model:add(inception(2, 512, {{128}, {128,256}, {24, 64}, {3, 64}},lib)) -- 4(c)
-   model:add(inception(2, 512, {{112}, {144,288}, {32, 64}, {3, 64}},lib)) -- 4(d)
-   model:add(inception(2, 528, {{256}, {160,320}, {32,128}, {3,128}},lib)) -- 4(e) (14x14x832)
-   --model:add(SpatialMaxPooling(3,3,2,2,1,1))
-   model:add(SpatialMaxPooling(3,3,2,2):ceil())
-   model:add(inception(2, 832, {{256}, {160,320}, {32,128}, {3,128}},lib)) -- 5(a)
-   model:add(inception(2, 832, {{384}, {192,384}, {48,128}, {3,128}},lib)) -- 5(b)
-   model:add(SpatialAveragePooling(7,7,1,1))
-   model:add(nn.View(1024):setNumInputDims(3))
-   model:add(nn.Dropout(0.4))
-   model:add(nn.Linear(1024,1000)):add(nn.ReLU(true))
-   model:add(nn.LogSoftMax())
-   model:get(1).gradInput = nil
+
+--[[
+
+   +-------+      +-------+        +-------+
+   | main0 +--+---> main1 +----+---> main2 +----+
+   +-------+  |   +-------+    |   +-------+    |
+              |                |                |
+              | +----------+   | +----------+   | +----------+
+              +-> softMax0 +-+ +-> softMax1 +-+ +-> softMax2 +-+
+                +----------+ |   +----------+ |   +----------+ |
+                             |                |                |   +-------+
+                             +----------------v----------------v--->  out  |
+                                                                   +-------+
+--]]
+
+   -- Building blocks ----------------------------------------------------------
+   local main0 = nn.Sequential()
+   main0:add(SC(3, 64, 7, 7, 2, 2, 3, 3)):add(RLU(true))
+   main0:add(SMP(3, 3, 2, 2):ceil())
+   main0:add(LRN(5,0.0001,0.75)) --new add xhzhao
+   main0:add(SC(64, 64, 1, 1)):add(RLU(true)) -- 2
+   main0:add(SC(64, 192, 3, 3, 1, 1, 1, 1)):add(RLU(true)) -- 3
+   main0:add(LRN(5,0.0001,0.75)) --new add xhzhao
+   main0:add(SMP(3,3,2,2):ceil())
+   main0:add(inc(192, {{ 64}, { 96,128}, {16, 32}, {3, 32}})) -- 4,5 / 3(a)
+   main0:add(inc(256, {{128}, {128,192}, {32, 96}, {3, 64}})) -- 6,7 / 3(b)
+   main0:add(SMP(3, 3, 2, 2):ceil())
+   main0:add(inc(480, {{192}, { 96,208}, {16, 48}, {3, 64}})) -- 8,9 / 4(a)
+
+   main0:get(1).gradInput = nil
+
+   local main1 = nn.Sequential()
+   main1:add(inc(512, {{160}, {112,224}, {24, 64}, {3, 64}})) -- 10,11 / 4(b)
+   main1:add(inc(512, {{128}, {128,256}, {24, 64}, {3, 64}})) -- 12,13 / 4(c)
+   main1:add(inc(512, {{112}, {144,288}, {32, 64}, {3, 64}})) -- 14,15 / 4(d)
+
+   local main2 = nn.Sequential()
+   main2:add(inc(528, {{256}, {160,320}, {32,128}, {3,128}})) -- 16,17 / 4(e)
+   main2:add(SMP(3, 3, 2, 2):ceil())
+   main2:add(inc(832, {{256}, {160,320}, {32,128}, {3,128}})) -- 18,19 / 5(a)
+   main2:add(inc(832, {{384}, {192,384}, {48,128}, {3,128}})) -- 20,21 / 5(b)
+
+   local sftMx0 = nn.Sequential() -- softMax0
+   sftMx0:add(SpatialAveragePooling(5, 5, 3, 3))
+   sftMx0:add(SC(512, 128, 1, 1)):add(RLU(true))
+   sftMx0:add(nn.View(128*4*4):setNumInputDims(3))
+   sftMx0:add(nn.Linear(128*4*4, 1024)):add(nn.ReLU())
+   sftMx0:add(nn.Dropout(0.7))
+   sftMx0:add(nn.Linear(1024, 1000))
+   sftMx0:add(nn.LogSoftMax())
+
+   local sftMx1 = nn.Sequential() -- softMax1
+   sftMx1:add(SpatialAveragePooling(5, 5, 3, 3))
+   sftMx1:add(SC(528, 128, 1, 1)):add(RLU(true))
+   sftMx1:add(nn.View(128*4*4):setNumInputDims(3))
+   sftMx1:add(nn.Linear(128*4*4, 1024)):add(nn.ReLU())
+   sftMx1:add(nn.Dropout(0.7))
+   sftMx1:add(nn.Linear(1024, 1000))
+   sftMx1:add(nn.LogSoftMax())
+
+   local sftMx2 = nn.Sequential() -- softMax2
+   sftMx2:add(SpatialAveragePooling(7, 7, 1, 1))
+   sftMx2:add(nn.View(1024):setNumInputDims(3))
+   sftMx2:add(nn.Dropout(0.4))
+   sftMx2:add(nn.Linear(1024, 1000))
+   sftMx2:add(nn.LogSoftMax())
+
+   -- Macro blocks -------------------------------------------------------------
+   local block2 = nn.Sequential()
+   block2:add(main2)
+   block2:add(sftMx2)
+
+   local split1 = nn.Concat(2)
+   split1:add(block2)
+   split1:add(sftMx1)
+
+   local block1 = nn.Sequential()
+   block1:add(main1)
+   block1:add(split1)
+
+   local split0 = nn.Concat(2)
+   split0:add(block1)
+   split0:add(sftMx0)
+
+   local block0 = nn.Sequential()
+   block0:add(main0)
+   block0:add(split0)
+
+   -- Main model definition ----------------------------------------------------
+   local model = block0
+
+   -- Play safe with GPUs ------------------------------------------------------
+   --model:cuda()
+   --model = makeDataParallel(model, nGPU) -- defined in util.lua
+   --model.imageSize = 256
+   --model.imageCrop = 224
+   --model.auxClassifiers = 2
+   --model.auxWeights = {0.3, 0.3}
+
    return model,'GoogleNet', {32,3,224,224}
 end
+
 
 return googlenet
