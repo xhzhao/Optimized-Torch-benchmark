@@ -46,9 +46,9 @@ sys.thresholdTime_backward = 0
 local nets = {}
 --nets[#nets+1] = require 'alexnet'
 --nets[#nets+1] = require 'alexnet_g1'
-nets[#nets+1] = require 'alexnet_g2'
+--nets[#nets+1] = require 'alexnet_g2'
 --nets[#nets+1] = require 'vgg_e'
---nets[#nets+1] = require 'googlenet'
+nets[#nets+1] = require 'googlenet'
 --nets[#nets+1] = require 'resnet'
 
 
@@ -56,7 +56,7 @@ local libs = {}
 --libs[#libs+1] = {cudnn.SpatialConvolution, cudnn.SpatialMaxPoolingMKLDNN, cudnn.ReLU, 'BDHW', 'cudnn'}
 -- libs[#libs+1] = {fbnn.SpatialConvolution, cudnn.SpatialMaxPooling, cudnn.ReLU, 'BDHW', 'fbnn'}
 libs[#libs+1] = {nn.SpatialConvolutionMKLDNN, nn.SpatialMaxPoolingMKLDNN, nn.ReLUMKLDNN, 'BDHW', 'nn'}
---libs[#libs+1] = {nn.SpatialConvolution, nn.SpatialMaxPoolingMKLDNN, nn.ReLU, 'BDHW', 'nn'}
+--libs[#libs+1] = {nn.SpatialConvolution, nn.SpatialMaxPooling, nn.ReLU, 'BDHW', 'nn'}
 --libs[#libs+1] = {mkldnn.SpatialConvolutionMM, mkldnn.SpatialMaxPooling, mkldnn.ReLU, 'BDHW', 'nn'}
 -- libs[#libs+1] = {nn.SpatialConvolutionBHWD, nn.SpatialMaxPoolingBHWD, nn.ReLU, 'BHWD', 'nnBHWD'}
 print('Running on CPU...')
@@ -175,7 +175,7 @@ for i=1,#nets do
          local output = model:updateOutput(input)
          local gradInput = model:updateGradInput(input, output)
          model:accGradParameters(input, output)
-	 print("time = ",sys.toc())
+	 print("totaltime = ",sys.toc())
          --cutorch.synchronize()
          collectgarbage()
          end

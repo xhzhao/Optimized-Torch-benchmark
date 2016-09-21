@@ -33,3 +33,5 @@ grep Concat $logName | grep backward | awk '{sum+=$6}END{print "Concat backward 
 
 echo "Threshold forward 	= 0"
 echo "Threshold backward 	= 0"
+
+grep totaltime $logName | awk '{sum+=$3}END{print "totaltime average 	= " sum/'$iter'}'
