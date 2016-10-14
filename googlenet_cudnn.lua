@@ -5,17 +5,17 @@
 -- Alfredo Canziani, Mar 16
 --------------------------------------------------------------------------------
 
---require 'cudnn'
---require 'cunn'
---require 'nn'
+require 'cudnn'
+require 'cunn'
+require 'nn'
 
 -- Some shortcuts
-local SC  = nn.SpatialConvolution
-local SMP = nn.SpatialMaxPooling
-local RLU = nn.ReLU
-local SpatialAveragePooling = nn.SpatialAveragePooling
-local SBatchNorm = nn.SpatialBatchNormalization
-local LRN = nn.LRN
+local SC  = cudnn.SpatialConvolution
+local SMP = cudnn.SpatialMaxPooling
+local RLU = cudnn.ReLU
+local SpatialAveragePooling = cudnn.SpatialAveragePooling
+local SBatchNorm = cudnn.SpatialBatchNormalization
+local LRN = cudnn.SpatialCrossMapLRN
 
 -- Utility inc(eption) function ------------------------------------------------
 local function inc(input_size, config) -- inception
