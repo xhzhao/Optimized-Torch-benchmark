@@ -45,11 +45,9 @@ sys.logsoftmaxTime_forward = 0
 sys.logsoftmaxTime_backward = 0
 
 local nets = {}
---nets[#nets+1] = require 'alexnet'
---nets[#nets+1] = require 'alexnet_g1'
---nets[#nets+1] = require 'alexnet_g2'
-nets[#nets+1] = require 'vgg_16'
-nets[#nets+1] = require 'vgg_19'
+nets[#nets+1] = require 'alexnet_g2'
+--nets[#nets+1] = require 'vgg_16'
+--nets[#nets+1] = require 'vgg_19'
 --nets[#nets+1] = require 'googlenet'
 --nets[#nets+1] = require 'googlenet_knl'
 --nets[#nets+1] = require 'resnet'
@@ -66,7 +64,7 @@ print('Running on CPU...')
 --print('Running on device: ' .. cutorch.getDeviceProperties(cutorch.getDevice()).name)
 
 steps = 10 -- nb of steps in loop to average perf
-nDryRuns = 5
+nDryRuns = 10
 
 torch.setdefaulttensortype('torch.FloatTensor')
 
