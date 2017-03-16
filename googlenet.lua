@@ -64,15 +64,15 @@ local function googlenet(lib)
    -- Building blocks ----------------------------------------------------------
    local main0 = nn.Sequential()
    main0:add(SC(3, 64, 7, 7, 2, 2, 3, 3)):add(RLU(true))
-   main0:add(SMP(3, 3, 2, 2):ceil())
+   main0:add(SMP(3, 3, 2, 2,1,1))
    main0:add(LRN(5,0.0001,0.75)) --new add xhzhao
    main0:add(SC(64, 64, 1, 1)):add(RLU(true)) -- 2
    main0:add(SC(64, 192, 3, 3, 1, 1, 1, 1)):add(RLU(true)) -- 3
    main0:add(LRN(5,0.0001,0.75)) --new add xhzhao
-   main0:add(SMP(3,3,2,2):ceil())
+   main0:add(SMP(3,3,2,2,1,1))
    main0:add(inc(192, {{ 64}, { 96,128}, {16, 32}, {3, 32}})) -- 4,5 / 3(a)
    main0:add(inc(256, {{128}, {128,192}, {32, 96}, {3, 64}})) -- 6,7 / 3(b)
-   main0:add(SMP(3, 3, 2, 2):ceil())
+   main0:add(SMP(3, 3, 2, 2,1,1))
    main0:add(inc(480, {{192}, { 96,208}, {16, 48}, {3, 64}})) -- 8,9 / 4(a)
 
    main0:get(1).gradInput = nil
@@ -84,7 +84,7 @@ local function googlenet(lib)
 
    local main2 = nn.Sequential()
    main2:add(inc(528, {{256}, {160,320}, {32,128}, {3,128}})) -- 16,17 / 4(e)
-   main2:add(SMP(3, 3, 2, 2):ceil())
+   main2:add(SMP(3, 3, 2, 2,1,1))
    main2:add(inc(832, {{256}, {160,320}, {32,128}, {3,128}})) -- 18,19 / 5(a)
    main2:add(inc(832, {{384}, {192,384}, {48,128}, {3,128}})) -- 20,21 / 5(b)
 
